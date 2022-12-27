@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 
 # Opening JSON file
-f = open('../data/2000.json')
+f = open('data/2774.json')
 
 # returns JSON object as 
 # a dictionary
@@ -27,7 +27,7 @@ for i, post in enumerate(data):
     sum = 0
 
     body.append(post['body'])
-    for j, word in enumerate(post['title'].split(' ')):
+    for j, word in enumerate(post['title'].split()):
         out1 += word + ' '
         if len(str(j)) > len(word):
             out1 += ' ' * (len(str(j)) - len(word))
@@ -47,7 +47,7 @@ parsed = json.loads(result)
 
 json_object = json.dumps(parsed, indent=4, ensure_ascii=False)
 
-outfile = Path('../data/movies.json')
+outfile = Path('data/raw_dataset.json')
 outfile.write_text(json_object, encoding='UTF-8')
 
 # Closing file
