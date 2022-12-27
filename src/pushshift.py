@@ -5,7 +5,7 @@ import datetime as dt
 start_time = dt.datetime.now()
 
 def main():
-    dataset_size = 2000
+    dataset_size = 10000
 
     reddit = praw.Reddit(client_id='yZn7KcD7GMoerEt8tuoF_g',
                         client_secret='JuTvsef5FhiKOGmVgUAmGXIHZxhimQ',
@@ -25,37 +25,37 @@ def main():
                                          fields='title,selftext')
 
     craw_cnt = 0; result_cnt = 0
-    with open('movies.json', 'w', encoding='utf-8') as f:
-        for post in submissions:
-            craw_cnt += 1
+    for post in submissions:
+        craw_cnt += 1
 
-            title = post.title
-            body = post.selftext
-            print(f'{craw_cnt}: {title}\n{body}')
+        title = post.title
+        body = post.selftext
+        print(f'{craw_cnt}: {title}\n{body}')
 
-            # If post body length >= 64, Add the post to dataset.
-            if len(body) >= 64:
-                # Preprocessing title, body.
-                if not 'http' in body:
-                    title = title.replace('\n', ' ')
-                    body = body.replace('\n', ' ')
-                    title = title.replace('\r', ' ')
-                    body = body.replace('\r', ' ')
-                    title = title.replace('\u2019', '\'')
-                    body = body.replace('\u2019', '\'')
-                    title = title.replace('\u2018', '\'')
-                    body = body.replace('\u2018', '\'')
-                    title = title.replace('\"', '')
-                    body = body.replace('\"', '')
+        # If post body length >= 64, Add the post to dataset.
+        if len(title) >= 20 and len(body) >= 64:
+            # Preprocessing title, body.
+            if not 'http' in body:
+                title = title.replace('\n', ' ')
+                body = body.replace('\n', ' ')
+                title = title.replace('\r', ' ')
+                body = body.replace('\r', ' ')
+                title = title.replace('\u2019', '\'')
+                body = body.replace('\u2019', '\'')
+                title = title.replace('\u2018', '\'')
+                body = body.replace('\u2018', '\'')
+                title = title.replace('\"', '')
+                body = body.replace('\"', '')
 
-                    movies_list.append({'title':title, 'body':body})
-                    result_cnt += 1
-                    
-                    print(f'----------Current_dataset_num: {result_cnt}/{dataset_size}----------')
+                movies_list.append({'title':title, 'body':body})
+                with open('movies.json', 'w', encoding='utf-8') as f:
+                    json.dump(movies_list, f, ensure_ascii=False, indent=2)
 
-            if result_cnt == dataset_size:
-                json.dump(movies_list, f, ensure_ascii=False, indent=2)
-                return
+                result_cnt += 1
+                print(f'----------Current_dataset_num: {result_cnt}/{dataset_size}----------')
+                
+                if result_cnt == dataset_size:
+                    return
     
 if __name__ == '__main__':
     main()
