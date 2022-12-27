@@ -31,6 +31,7 @@ posts = pd.DataFrame(posts,columns=['title','body','date'])
 result = posts.to_json(orient="records")
 parsed = json.loads(result)
 
+# data cleaning
 for i in parsed:
     i['title'] = i['title'].replace('\n', ' ')
     i['body'] = i['body'].replace('\n', ' ')
@@ -45,5 +46,5 @@ for i in parsed:
 
 json_object = json.dumps(parsed, indent=4, ensure_ascii=False)
 
-outfile = Path('movies.json')
+outfile = Path('../data/movies1227.json')
 outfile.write_text(json_object, encoding='UTF-8')
