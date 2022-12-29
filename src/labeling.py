@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 
 # Opening JSON file
-f = open('../data/raw_dataset.json')
+f = open('../data/roger.json')
 
 # returns JSON object as 
 # a dictionary
@@ -16,27 +16,27 @@ while(i != len(data)):
     post['label'] = '['
     while(1):
         print('------------------------------------')
-        print(f'[{i}] # Input \'q\' to quit, \'r\' undo last action.')
+        print(f'[{i}] # Input \'q\' to quit sentence, \'u\' undo last action.')
         print(post['title'])
         print(post['index'])
 
-        # input q for quit, r for undo
+        # input q for quit, u for undo
         aspect = input('Aspect: ')
         if 'q' in aspect:
             break
-        elif 'r' in aspect:
+        elif 'u' in aspect:
             i -= 1
             continue
         opinion = input('Opinion: ')
         if 'q' in opinion:
             break
-        elif 'r' in opinion:
+        elif 'u' in opinion:
             i -= 1
             continue        
         sentiment = input('Sentiment(p,n,N): ')
         if 'q' in sentiment:
             break
-        elif 'r' in sentiment:
+        elif 'u' in sentiment:
             i -= 1
             continue  
         
@@ -66,5 +66,5 @@ while(i != len(data)):
 
     json_object = json.dumps(parsed, indent=4, ensure_ascii=False)
 
-    outfile = Path('./test.json')
+    outfile = Path('./labeled.json')
     outfile.write_text(json_object, encoding='UTF-8')
