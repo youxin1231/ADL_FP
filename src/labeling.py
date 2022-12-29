@@ -25,19 +25,19 @@ while(i != len(data)):
         if 'q' in aspect:
             break
         elif 'u' in aspect:
-            i -= 1
+            post['label'] = '['
             continue
         opinion = input('Opinion: ')
         if 'q' in opinion:
             break
         elif 'u' in opinion:
-            i -= 1
+            post['label'] = '['
             continue        
         sentiment = input('Sentiment(p,n,N): ')
         if 'q' in sentiment:
             break
         elif 'u' in sentiment:
-            i -= 1
+            post['label'] = '['
             continue  
         
         aspect = list(map(int,aspect.split()))
