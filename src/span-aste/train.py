@@ -155,10 +155,10 @@ def do_train():
 
             # valid
             if global_step % args.valid_steps == 0:
-                save_dir = os.path.join(args.save_dir, "model_%d" % global_step)
-                if not os.path.exists(save_dir):
-                    os.makedirs(save_dir)
-                torch.save(model.state_dict(), os.path.join(save_dir, "model.pt"))
+                # save_dir = os.path.join(args.save_dir, "model_%d" % global_step)
+                # if not os.path.exists(save_dir):
+                #     os.makedirs(save_dir)
+                # torch.save(model.state_dict(), os.path.join(save_dir, "model.pt"))
                 precision, recall, f1 = evaluate(model, metric, eval_dataloader, device)
                 print(
                     "Evaluation precision: %.5f, recall: %.5f, F1: %.5f" %
@@ -169,7 +169,7 @@ def do_train():
                         f"best F1 performence has been updated: {best_f1:.5f} --> {f1:.5f}"
                     )
                     best_f1 = f1
-                    save_dir = os.path.join(args.save_dir, "model_best")
+                    save_dir = os.path.join(args.save_dir)
                     if not os.path.exists(save_dir):
                         os.makedirs(save_dir)
                     torch.save(model.state_dict(), os.path.join(save_dir, "model.pt"))
