@@ -1,3 +1,5 @@
 *.json
 ckpt
+processed_data
+output
 __pycache__
