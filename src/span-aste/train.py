@@ -30,6 +30,7 @@ from utils.tager import RelationLabel
 from transformers import BertTokenizer, BertModel, get_linear_schedule_with_warmup
 from tqdm import trange
 from matplotlib import pyplot as plt
+from thop import profile
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 if torch.cuda.is_available():
@@ -74,6 +75,7 @@ def do_train():
         relation_dim,
         device=device
     )
+
     model.to(device)
 
     no_decay = ['bias', 'LayerNorm.weight']
@@ -121,10 +123,16 @@ def do_train():
             attention_mask = torch.tensor(attention_mask, device=device)
             token_type_ids = torch.tensor(token_type_ids, device=device)
 
+            # FLOPs, parameters
+            if epoch == 1 and batch_ix == 0:
+                flops, params = profile(model, inputs=(input_ids, attention_mask, token_type_ids, seq_len))
+                print(f'FLOPs: {flops/1000**3:.2f}G')
+                print(f'Parameters: {params/1000**2:.2f}M')
+
             # forward
             spans_probability, span_indices, relations_probability, candidate_indices = model(
                 input_ids, attention_mask, token_type_ids, seq_len)
-
+            
             gold_span_indices, gold_span_labels = gold_labels(span_indices, spans, span_labels)
             loss_ner = log_likelihood(spans_probability, span_indices, gold_span_indices, gold_span_labels)
 
@@ -190,7 +198,7 @@ def do_train():
         os.makedirs(output_dir)
 
     # Plot loss curve
-    plt.plot(range(1, args.num_epochs+1), plot_loss_list)
+    plt.plot(range(1, len(plot_loss_list)+1), plot_loss_list)
     plt.xlabel('Epoch(s)')
     plt.ylabel('Loss')
     plt.savefig(f'{output_dir}/loss.png')
@@ -200,9 +208,9 @@ def do_train():
     plt.title('Accuracy')
     plt.ylabel("Accuracy(%)") # y label
     plt.xlabel("Epoch(s)") # x label
-    plt.plot(range(1, len(precision_list)+1), 100 * precision_list, color='red', linestyle="-", linewidth="1", markersize="8", marker=".", label="Precision")
-    plt.plot(range(1, len(recall_list)+1), 100 * recall_list, color='blue', linestyle="-", linewidth="1", markersize="8", marker=".", label="Recall")
-    plt.plot(range(1, len(f1_list)+1), 100 * f1_list, color='green', linestyle="-", linewidth="1", markersize="8", marker=".", label="F1-score")
+    plt.plot(range(1, len(precision_list)+1), [item * 100 for item in precision_list], color='red', linestyle="-", linewidth="1", markersize="8", marker=".", label="Precision")
+    plt.plot(range(1, len(recall_list)+1), [item * 100 for item in recall_list], color='blue', linestyle="-", linewidth="1", markersize="8", marker=".", label="Recall")
+    plt.plot(range(1, len(f1_list)+1), [item * 100 for item in f1_list], color='green', linestyle="-", linewidth="1", markersize="8", marker=".", label="F1-score")
     plt.minorticks_on()
     plt.legend()
     plt.savefig(f'{output_dir}/accuracy.png')
