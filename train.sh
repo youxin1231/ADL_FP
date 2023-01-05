@@ -14,7 +14,8 @@ python3 src/span-aste/train.py \
     --warmup_proportion 0.1 \
     --train_path processed_data \
     --dev_path processed_data \
-    --save_dir ckpt/span-aste \
+    --ckpt_dir ckpt/span-aste \
+    --output_dir output \
     --max_seq_len 256 \
     --num_epochs 70 \
     --seed 2022 \

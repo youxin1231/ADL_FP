@@ -29,6 +29,7 @@ from utils.tager import SpanLabel
 from utils.tager import RelationLabel
 from transformers import BertTokenizer, BertModel, get_linear_schedule_with_warmup
 from tqdm import trange
+from matplotlib import pyplot as plt
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 if torch.cuda.is_available():
@@ -109,6 +110,8 @@ def do_train():
     global_step = 0
     best_f1 = 0
     loss_list = []
+
+    plot_loss_list = []; precision_list = []; recall_list = []; f1_list = []
     for epoch in trange(1, args.num_epochs + 1):
         # pbar = ProgressBar(n_total=len(train_dataloader), desc='Training')
         model.train()
@@ -146,6 +149,7 @@ def do_train():
             if global_step % args.logging_steps == 0:
                 time_diff = time.time() - tic_train
                 loss_avg = sum(loss_list) / len(loss_list)
+                plot_loss_list.append(loss_avg)
 
                 print(
                     "global step %d, epoch: %d, loss: %.5f, speed: %.2f step/s"
@@ -155,11 +159,16 @@ def do_train():
 
             # valid
             if global_step % args.valid_steps == 0:
-                # save_dir = os.path.join(args.save_dir, "model_%d" % global_step)
-                # if not os.path.exists(save_dir):
-                #     os.makedirs(save_dir)
-                # torch.save(model.state_dict(), os.path.join(save_dir, "model.pt"))
+                # ckpt_dir = os.path.join(args.ckpt_dir, "model_%d" % global_step)
+                # if not os.path.exists(ckpt_dir):
+                #     os.makedirs(ckpt_dir)
+                # torch.save(model.state_dict(), os.path.join(ckpt_dir, "model.pt"))
                 precision, recall, f1 = evaluate(model, metric, eval_dataloader, device)
+
+                precision_list.append(precision)
+                recall_list.append(recall)
+                f1_list.append(f1)
+
                 print(
                     "Evaluation precision: %.5f, recall: %.5f, F1: %.5f" %
                     (precision, recall, f1))
@@ -169,13 +178,34 @@ def do_train():
                         f"best F1 performence has been updated: {best_f1:.5f} --> {f1:.5f}"
                     )
                     best_f1 = f1
-                    save_dir = os.path.join(args.save_dir)
-                    if not os.path.exists(save_dir):
-                        os.makedirs(save_dir)
-                    torch.save(model.state_dict(), os.path.join(save_dir, "model.pt"))
+                    ckpt_dir = os.path.join(args.ckpt_dir)
+                    if not os.path.exists(ckpt_dir):
+                        os.makedirs(ckpt_dir)
+                    torch.save(model.state_dict(), os.path.join(ckpt_dir, "model.pt"))
 
                 tic_train = time.time()
 
+    output_dir = os.path.join(args.output_dir, 'img')
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # Plot loss curve
+    plt.plot(range(1, args.num_epochs+1), plot_loss_list)
+    plt.xlabel('Epoch(s)')
+    plt.ylabel('Loss')
+    plt.savefig(f'{output_dir}/loss.png')
+    plt.clf()
+
+    # Plot accuracy curve
+    plt.title('Accuracy')
+    plt.ylabel("Accuracy(%)") # y label
+    plt.xlabel("Epoch(s)") # x label
+    plt.plot(range(1, len(precision_list)+1), 100 * precision_list, color='red', linestyle="-", linewidth="1", markersize="8", marker=".", label="Precision")
+    plt.plot(range(1, len(recall_list)+1), 100 * recall_list, color='blue', linestyle="-", linewidth="1", markersize="8", marker=".", label="Recall")
+    plt.plot(range(1, len(f1_list)+1), 100 * f1_list, color='green', linestyle="-", linewidth="1", markersize="8", marker=".", label="F1-score")
+    plt.minorticks_on()
+    plt.legend()
+    plt.savefig(f'{output_dir}/accuracy.png')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -188,8 +218,10 @@ if __name__ == '__main__':
     parser.add_argument("--warmup_proportion", default=0.1, type=float, help="The initial learning rate for AdamW.")
     parser.add_argument("--train_path", default="preprocessed_data", type=str, help="The path of train set.")
     parser.add_argument("--dev_path", default="preprocessed_data", type=str, help="The path of dev set.")
-    parser.add_argument("--save_dir", default='./checkpoint', type=str,
+    parser.add_argument("--ckpt_dir", default='./checkpoint', type=str,
                         help="The output directory where the model checkpoints will be written.")
+    parser.add_argument("--output_dir", default='./output', type=str,
+                        help="The output directory where output learning curve will be written.")
     parser.add_argument("--max_seq_len", default=256, type=int,
                         help="The maximum input sequence length. Sequences longer than this will be split automatically.")
     parser.add_argument("--num_epochs", default=70, type=int, help="Total number of training epochs to perform.")
